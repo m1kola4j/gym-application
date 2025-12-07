@@ -1,6 +1,5 @@
 package org.example.gym_application.vaadin;
 
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -11,8 +10,12 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 /**
  * Minimalny widok startowy służący do potwierdzenia, że integracja Vaadin działa.
  */
-@Route("")
-@PageTitle("GymFlow")
+/**
+ * Stary widok startowy - zastąpiony przez DashboardView z MainLayout.
+ * Można usunąć lub zostawić jako fallback.
+ */
+@Route("old")
+@PageTitle("GymFlow - Stary widok")
 @AnonymousAllowed
 public class MainView extends VerticalLayout {
 
@@ -23,8 +26,7 @@ public class MainView extends VerticalLayout {
 
         add(new H1("GymFlow – panel startowy"));
         add(new Paragraph(
-                "To tylko widok testowy. W kolejnych etapach dodamy nawigację i dashboard."));
-        add(new Button("Przejdź do panelu", click -> click.getSource().setText("Niedługo dostępne")));
+                "Ten widok został zastąpiony przez DashboardView. Przejdź do / aby zobaczyć nowy dashboard."));
     }
 }
 

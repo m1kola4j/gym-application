@@ -67,10 +67,16 @@ public class ClassSessionService {
         ClassSession session = classSessionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Zajęcia o ID " + id + " nie zostały znalezione"));
         
-        if (!session.getReservations().isEmpty()) {
-            throw new IllegalStateException("Nie można usunąć zajęć, które mają rezerwacje");
+        // Sprawdź czy są aktywne rezerwacje (tylko RESERVED, nie CANCELLED)
+        long activeReservations = session.getReservations().stream()
+                .filter(r -> r.getStatus() == org.example.gym_application.domain.ReservationStatus.RESERVED)
+                .count();
+        
+        if (activeReservations > 0) {
+            throw new IllegalStateException("Nie można usunąć zajęć, które mają aktywne rezerwacje. Najpierw anuluj rezerwacje.");
         }
         
+        // Usuwanie zajęć automatycznie usunie też powiązane rezerwacje (cascade)
         classSessionRepository.deleteById(id);
     }
 
