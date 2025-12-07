@@ -1,0 +1,11 @@
+package org.example.gym_application.repository;
+
+import org.example.gym_application.domain.Trainer;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TrainerRepository extends JpaRepository<Trainer, Long> {
+}
+
+
+
+
