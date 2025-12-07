@@ -122,7 +122,7 @@ public class RegisterView extends VerticalLayout {
                 Notification.show("Zarejestrowano!", 3000, Notification.Position.TOP_CENTER)
                     .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 
-                getUI().ifPresent(ui -> ui.navigate("dashboard"));
+                getUI().ifPresent(ui -> ui.navigate("member/dashboard"));
                 
             } catch (Exception ex) {
                 Notification.show("Błąd: " + ex.getMessage(), 5000, Notification.Position.TOP_CENTER)

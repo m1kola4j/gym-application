@@ -18,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
@@ -78,7 +79,8 @@ public class LoginView extends VerticalLayout {
                 Notification.show("Zalogowano!", 2000, Notification.Position.TOP_CENTER)
                     .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 
-                getUI().ifPresent(ui -> ui.navigate("dashboard"));
+                String redirectUrl = getRedirectUrlByRole(authentication);
+                getUI().ifPresent(ui -> ui.navigate(redirectUrl));
                 
             } catch (AuthenticationException ex) {
                 Notification.show("Nieprawidłowy email lub hasło", 3000, Notification.Position.TOP_CENTER)
@@ -111,5 +113,19 @@ public class LoginView extends VerticalLayout {
         form.add(title, emailField, passwordField, loginButton, registerLink, backButton);
         mainContainer.add(form);
         add(mainContainer);
+    }
+
+    private String getRedirectUrlByRole(Authentication authentication) {
+        for (GrantedAuthority authority : authentication.getAuthorities()) {
+            String role = authority.getAuthority();
+            if (role.equals("ROLE_ADMIN")) {
+                return "admin/dashboard";
+            } else if (role.equals("ROLE_STAFF")) {
+                return "staff/dashboard";
+            } else if (role.equals("ROLE_MEMBER")) {
+                return "member/dashboard";
+            }
+        }
+        return "member/dashboard";
     }
 }

@@ -14,9 +14,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-/**
- * Konfiguracja bezpieczeństwa aplikacji.
- */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -48,11 +45,22 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(authorize -> authorize
+                // Publiczne strony
                 .requestMatchers("/", "/login", "/register").permitAll()
                 .requestMatchers("/VAADIN/**", "/frontend/**", "/icons/**", "/images/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .anyRequest().permitAll()
+                
+                // Zabezpieczone panele wg ról
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/staff/**").hasRole("STAFF")
+                .requestMatchers("/member/**").hasRole("MEMBER")
+                
+                // Dashboard dostępny dla wszystkich zalogowanych
+                .requestMatchers("/dashboard/**").authenticated()
+                
+                // Reszta wymaga zalogowania
+                .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));
         
