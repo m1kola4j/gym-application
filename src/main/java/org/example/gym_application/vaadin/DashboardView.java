@@ -9,12 +9,12 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.example.gym_application.service.*;
 
-@Route(value = "", layout = MainLayout.class)
-@PageTitle("Dashboard | GymFlow")
+@Route(value = "dashboard", layout = MainLayout.class)
+@PageTitle("Dashboard | GymApp")
 @AnonymousAllowed
 public class DashboardView extends VerticalLayout {
 
-    private final MemberService memberService;
+    private final   MemberService memberService;
     private final TrainerService trainerService;
     private final ClassSessionService classSessionService;
     private final ReservationService reservationService;
