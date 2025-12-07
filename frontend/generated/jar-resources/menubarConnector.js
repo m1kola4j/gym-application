@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2023 Vaadin Ltd.
+ * Copyright 2000-2024 Vaadin Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,11 +14,6 @@
  * the License.
  */
 import './contextMenuConnector.js';
-
-(function () {
-  const tryCatchWrapper = function (callback) {
-    return window.Vaadin.Flow.tryCatchWrapper(callback, 'Vaadin Menu Bar');
-  };
 
   /**
    * Initializes the connector for a menu bar element.
@@ -43,20 +38,27 @@ import './contextMenuConnector.js';
       }
     });
 
-    menubar.$connector = {
-      /**
-       * Generates and assigns the items to the menu bar.
-       *
-       * When the method is called without providing a node id,
-       * the previously generated items tree will be used.
-       * That can be useful if you only want to sync the disabled and hidden properties of root items.
-       *
-       * @param {number | undefined} nodeId
-       */
-      generateItems: tryCatchWrapper((nodeId) => {
-        if (!menubar.shadowRoot) {
-          // workaround for https://github.com/vaadin/flow/issues/5722
-          setTimeout(() => menubar.$connector.generateItems(nodeId));
+  menubar.$connector = {
+    /**
+     * Generates and assigns the items to the menu bar.
+     *
+     * When the method is called without providing a node id,
+     * the previously generated items tree will be used.
+     * That can be useful if you only want to sync the disabled and hidden properties of root items.
+     *
+     * @param {number | undefined} nodeId
+     */
+    generateItems(nodeId) {
+      if (!menubar.shadowRoot) {
+        // workaround for https://github.com/vaadin/flow/issues/5722
+        setTimeout(() => menubar.$connector.generateItems(nodeId));
+        return;
+      }
+
+        if (!menubar._container) {
+          // Menu-bar defers first buttons render to avoid re-layout
+          // See https://github.com/vaadin/web-components/issues/7271
+          queueMicrotask(() => menubar.$connector.generateItems(nodeId));
           return;
         }
 
@@ -66,8 +68,14 @@ import './contextMenuConnector.js';
 
         let items = menubar.__generatedItems || [];
 
-        // Propagate disabled state from items to parent buttons
-        items.forEach((item) => (item.disabled = item.component.disabled));
+        items.forEach((item) => {
+          // Propagate disabled state from items to parent buttons
+          item.disabled = item.component.disabled;
+
+          // Saving item to component because `_item` can be reassigned to a new value
+          // when the component goes to the overflow menu
+          item.component._rootItem = item;
+        });
 
         // Observe for hidden and disabled attributes in case they are changed by Flow.
         // When a change occurs, the observer will re-generate items on top of the existing tree
@@ -88,33 +96,27 @@ import './contextMenuConnector.js';
 
         menubar.items = items;
 
-        // Propagate click events from the menu buttons to the item components
-        menubar._buttons.forEach((button) => {
-          if (button.item && button.item.component) {
-            button.addEventListener('click', (e) => {
-              if (e.composedPath().indexOf(button.item.component) === -1) {
-                button.item.component.click();
-                e.stopPropagation();
-              }
-            });
-          }
-        });
-      })
-    };
-  }
-
-  function setClassName (component) {
-    if (component._item) {
-      component._item.className = component.className;
-    }
-  }
-
-  window.Vaadin.Flow.menubarConnector = {
-    initLazy(...args) {
-      return tryCatchWrapper(initLazy)(...args);
-    },
-    setClassName(...args) {
-      return tryCatchWrapper(setClassName)(...args);
+      // Propagate click events from the menu buttons to the item components
+      menubar._buttons.forEach((button) => {
+        if (button.item && button.item.component) {
+          button.addEventListener('click', (e) => {
+            if (e.composedPath().indexOf(button.item.component) === -1) {
+              button.item.component.click();
+              e.stopPropagation();
+            }
+          });
+        }
+      });
     }
   };
-})();
+}
+
+  function setClassName(component) {
+    const item = component._rootItem || component._item;
+
+    if (item) {
+      item.className = component.className;
+    }
+  }
+
+window.Vaadin.Flow.menubarConnector = { initLazy, setClassName };
