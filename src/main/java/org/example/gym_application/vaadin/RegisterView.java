@@ -2,12 +2,11 @@ package org.example.gym_application.vaadin;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -15,6 +14,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import jakarta.servlet.http.HttpServletRequest;
 import org.example.gym_application.service.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,126 +22,138 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 @Route("register")
-@PageTitle("Rejestracja | GymFlow")
+@PageTitle("Rejestracja | GymApp")
 @AnonymousAllowed
 public class RegisterView extends VerticalLayout {
 
-    private final UserService userService;
-    private final AuthenticationManager authenticationManager;
-    private final HttpServletRequest httpServletRequest;
-
     public RegisterView(UserService userService, 
-                       AuthenticationManager authenticationManager,
-                       HttpServletRequest httpServletRequest) {
-        this.userService = userService;
-        this.authenticationManager = authenticationManager;
-        this.httpServletRequest = httpServletRequest;
+                        AuthenticationManager authenticationManager,
+                        HttpServletRequest httpServletRequest) {
 
         setSizeFull();
-        setPadding(true);
-        setSpacing(true);
-        setAlignItems(FlexComponent.Alignment.CENTER);
-        setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        setPadding(false);
+        setSpacing(false);
+        getStyle().set("background", "linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)");
 
-        // Tytuł
-        H1 title = new H1("Zarejestruj się");
-        title.addClassNames("text-primary", "text-2xl", "font-bold");
+        VerticalLayout mainContainer = new VerticalLayout();
+        mainContainer.setSizeFull();
+        mainContainer.setAlignItems(Alignment.CENTER);
+        mainContainer.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        // Formularz
+        VerticalLayout form = new VerticalLayout();
+        form.setAlignItems(Alignment.CENTER);
+        form.setWidth("500px");
+        form.getStyle()
+            .set("background", "rgba(255,255,255,0.95)")
+            .set("border-radius", "20px")
+            .set("padding", "50px")
+            .set("box-shadow", "0 25px 80px rgba(0,0,0,0.5)");
+
+        H2 title = new H2("Rejestracja");
+        title.getStyle()
+            .set("color", "#1a1a2e")
+            .set("font-size", "2rem")
+            .set("font-weight", "700")
+            .set("margin", "0 0 10px 0");
+
+        Paragraph subtitle = new Paragraph("Dołącz do nas!");
+        subtitle.getStyle().set("color", "#666").set("margin", "0 0 30px 0");
+
+        HorizontalLayout row1 = new HorizontalLayout();
+        row1.setWidthFull();
         TextField firstNameField = new TextField("Imię");
+        firstNameField.setWidthFull();
         firstNameField.setRequired(true);
-        firstNameField.setWidth("300px");
-
         TextField lastNameField = new TextField("Nazwisko");
+        lastNameField.setWidthFull();
         lastNameField.setRequired(true);
-        lastNameField.setWidth("300px");
+        row1.add(firstNameField, lastNameField);
 
         EmailField emailField = new EmailField("Email");
+        emailField.setWidthFull();
         emailField.setRequired(true);
-        emailField.setWidth("300px");
 
-        TextField phoneField = new TextField("Telefon");
-        phoneField.setWidth("300px");
+        TextField phoneField = new TextField("Telefon (opcjonalnie)");
+        phoneField.setWidthFull();
 
+        HorizontalLayout row2 = new HorizontalLayout();
+        row2.setWidthFull();
         PasswordField passwordField = new PasswordField("Hasło");
+        passwordField.setWidthFull();
         passwordField.setRequired(true);
-        passwordField.setWidth("300px");
-
         PasswordField confirmPasswordField = new PasswordField("Potwierdź hasło");
+        confirmPasswordField.setWidthFull();
         confirmPasswordField.setRequired(true);
-        confirmPasswordField.setWidth("300px");
+        row2.add(passwordField, confirmPasswordField);
 
-        FormLayout formLayout = new FormLayout();
-        formLayout.add(firstNameField, lastNameField, emailField, phoneField, passwordField, confirmPasswordField);
-        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
-
-        // Przyciski
-        Button registerButton = new Button("Zarejestruj się");
-        registerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        registerButton.addClickListener(e -> {
-            String firstName = firstNameField.getValue();
-            String lastName = lastNameField.getValue();
-            String email = emailField.getValue();
-            String phone = phoneField.getValue();
+        Button registerButton = new Button("Zarejestruj się", e -> {
+            String firstName = firstNameField.getValue().trim();
+            String lastName = lastNameField.getValue().trim();
+            String email = emailField.getValue().trim();
+            String phone = phoneField.getValue().trim();
             String password = passwordField.getValue();
             String confirmPassword = confirmPasswordField.getValue();
 
-            // Walidacja
             if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Notification.show("Wypełnij wszystkie wymagane pola", 3000, Notification.Position.TOP_CENTER);
+                Notification.show("Wypełnij wszystkie wymagane pola", 3000, Notification.Position.TOP_CENTER)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 return;
             }
-
             if (!password.equals(confirmPassword)) {
-                Notification.show("Hasła nie są identyczne", 3000, Notification.Position.TOP_CENTER);
+                Notification.show("Hasła nie są identyczne", 3000, Notification.Position.TOP_CENTER)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 return;
             }
-
             if (password.length() < 6) {
-                Notification.show("Hasło musi mieć co najmniej 6 znaków", 3000, Notification.Position.TOP_CENTER);
+                Notification.show("Hasło minimum 6 znaków", 3000, Notification.Position.TOP_CENTER)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
                 return;
             }
 
             try {
-                // Rejestracja użytkownika
                 userService.registerMember(firstName, lastName, email, phone, password);
-
-                // Automatyczne logowanie po rejestracji
-                UsernamePasswordAuthenticationToken authToken = 
-                        new UsernamePasswordAuthenticationToken(email, password);
-                authToken.setDetails(new WebAuthenticationDetails(httpServletRequest));
                 
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, password);
+                authToken.setDetails(new WebAuthenticationDetails(httpServletRequest));
                 Authentication authentication = authenticationManager.authenticate(authToken);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                // Przekierowanie do dashboardu członka
-                getUI().ifPresent(ui -> ui.navigate("/member/dashboard"));
-                Notification.show("Rejestracja zakończona pomyślnie!", 3000, Notification.Position.TOP_CENTER);
-            } catch (IllegalArgumentException ex) {
-                Notification.show("Błąd: " + ex.getMessage(), 5000, Notification.Position.TOP_CENTER);
+                Notification.show("Zarejestrowano!", 3000, Notification.Position.TOP_CENTER)
+                    .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                
+                getUI().ifPresent(ui -> ui.navigate("dashboard"));
+                
             } catch (Exception ex) {
-                Notification.show("Wystąpił błąd podczas rejestracji", 5000, Notification.Position.TOP_CENTER);
+                Notification.show("Błąd: " + ex.getMessage(), 5000, Notification.Position.TOP_CENTER)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
+        registerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
+        registerButton.setWidthFull();
+        registerButton.setHeight("50px");
+        registerButton.getStyle()
+            .set("background", "linear-gradient(135deg, #667eea 0%, #764ba2 100%)")
+            .set("border-radius", "10px")
+            .set("margin-top", "30px")
+            .set("font-weight", "600");
 
-        Button backButton = new Button("Powrót do strony głównej");
-        backButton.addClickListener(e -> backButton.getUI().ifPresent(ui -> ui.navigate("/")));
+        HorizontalLayout loginLink = new HorizontalLayout();
+        loginLink.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        loginLink.setWidthFull();
+        Paragraph text = new Paragraph("Masz konto? ");
+        text.getStyle().set("margin", "0").set("color", "#666");
+        Anchor anchor = new Anchor("login", "Zaloguj się");
+        anchor.getStyle().set("color", "#667eea").set("font-weight", "600");
+        loginLink.add(text, anchor);
+        loginLink.getStyle().set("margin-top", "25px");
 
-        Paragraph loginLink = new Paragraph("Masz już konto? ");
-        com.vaadin.flow.component.html.Anchor loginAnchor = 
-                new com.vaadin.flow.component.html.Anchor("/login", "Zaloguj się");
-        loginLink.add(loginAnchor);
+        Button backButton = new Button("← Powrót", e -> getUI().ifPresent(ui -> ui.navigate("")));
+        backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        backButton.getStyle().set("color", "#888").set("margin-top", "15px");
 
-        VerticalLayout formContainer = new VerticalLayout();
-        formContainer.setAlignItems(FlexComponent.Alignment.CENTER);
-        formContainer.setSpacing(true);
-        formContainer.setPadding(false);
-        formContainer.setWidth("400px");
-        formContainer.add(formLayout, registerButton, backButton, loginLink);
-
-        add(title, formContainer);
+        form.add(title, subtitle, row1, emailField, phoneField, row2, registerButton, loginLink, backButton);
+        mainContainer.add(form);
+        add(mainContainer);
     }
 }
